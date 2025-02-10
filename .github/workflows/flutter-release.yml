@@ -82,7 +82,7 @@ jobs:
           packageName: com.slconsultech.statusmonitorapp
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
-          status: completed
+          status: draft
       
       # ✅ Clean Up Sensitive Files
       - name: Clean Up
