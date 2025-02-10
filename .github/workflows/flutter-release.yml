@@ -72,13 +72,15 @@ jobs:
       - name: Build Android App Bundle
         run: flutter build appbundle
 
-      # ✅ Deploy to Google Play (Internal Testing)
+      - name: Verify Build Output
+        run: ls -R build/app/outputs/bundle/release/
+      
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: "{}"  # Empty because we're using Workload Identity Federation
+          serviceAccountJson: "{}"  # Use Workload Identity Federation
           packageName: com.slconsultech.statusmonitorapp
-          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          releaseFiles: ${{ github.workspace }}/build/app/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
 
