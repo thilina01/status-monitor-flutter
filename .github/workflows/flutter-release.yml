@@ -78,12 +78,12 @@ jobs:
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: "{}"  # Use Workload Identity Federation
+          serviceAccountJson: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
           packageName: com.slconsultech.statusmonitorapp
-          releaseFiles: ${{ github.workspace }}/build/app/outputs/bundle/release/app-release.aab
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
-
+      
       # ✅ Clean Up Sensitive Files
       - name: Clean Up
         run: rm -f android/app/upload-keystore.jks
