@@ -14,6 +14,7 @@ dependencies:
   shared_preferences: ^2.1.0
   provider: ^6.0.5
   flutter_local_notifications: ^18.0.1
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,10 @@ flutter_launcher_icons:
   image_path: "assets/icons/app_icon.png"
   adaptive_icon_background: "#ffffff"  # Background color (Android only)
   adaptive_icon_foreground: "assets/icons/app_icon.png"  # Foreground icon (Android only)
+
+flutter_native_splash:
+  color: "#000000" # Background color
+  image: assets/icons/app_icon.png # Your splash logo (Ensure the file exists)
+  android_12:
+    image: assets/icons/app_icon.png
+    icon_background_color: "#000000"
