@@ -1,12 +1,33 @@
  
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 import 'screens/home_screen.dart';
 import 'services/api_service.dart';
 import 'services/theme_provider.dart';
+import 'services/background_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Workmanager with the background callback
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false, // Change to true for debugging
+  );
+
+  // Register a periodic task that will trigger the background fetch.
+  // Note: The minimum frequency on Android is 15 minutes.
+  Workmanager().registerPeriodicTask(
+    "1",
+    backgroundTaskKey,
+    frequency: Duration(minutes: 15),
+    initialDelay: Duration(seconds: 10), // Optional: delay before the first run
+    constraints: Constraints(
+      networkType: NetworkType.connected,
+    ),
+  );
+
   runApp(MyApp());
 }
 

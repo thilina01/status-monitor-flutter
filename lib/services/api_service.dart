@@ -11,6 +11,7 @@ class ApiService with ChangeNotifier {
   List<dynamic> _services = [];
   Map<String, dynamic> _data = {};
   String _lastUpdateTime = "";
+  final Set<String> _notifiedServices = {};
 
   // Auto-refresh settings
   int _autoRefreshDuration = 30; // Default to 30 seconds
@@ -154,10 +155,20 @@ class ApiService with ChangeNotifier {
   /// 🔔 Check if any service transitioned from "up" to "down"
   void _checkForDownServices(List<dynamic> oldServices, List<dynamic> newServices) {
     for (int i = 0; i < newServices.length; i++) {
-      if (i < oldServices.length &&
-          oldServices[i]['status'] != 'down' &&
-          newServices[i]['status'] == 'down') {
-        _showNotification(newServices[i]['name']);
+      String serviceName = newServices[i]['name'];
+      String newStatus = newServices[i]['status'];
+      String oldStatus = (i < oldServices.length) ? oldServices[i]['status'] : '';
+
+      if ((newStatus == 'down' || newStatus == 'unhealthy')) {
+        // Only notify if the service was not already notified and it was not down before
+        if (!_notifiedServices.contains(serviceName) &&
+            (oldStatus != 'down' && oldStatus != 'unhealthy')) {
+          _showNotification(serviceName);
+          _notifiedServices.add(serviceName);
+        }
+      } else {
+        // When service is up, remove it from the notified set (allow future alerts)
+        _notifiedServices.remove(serviceName);
       }
     }
   }
