@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/theme_provider.dart';
@@ -16,14 +18,17 @@ class HomeScreenState extends State<HomeScreen> {
   late Timer _timer;
   int refreshCountdown = 0;
 
+  // Define a MethodChannel to invoke the minimize function on Android.
+  static const platform = MethodChannel('com.slconsultech.status_monitor/minimize');
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final apiService = Provider.of<ApiService>(context, listen: false);
-      await Future.delayed(Duration(milliseconds: 500)); // Small delay to ensure settings are loaded
-      refreshCountdown = apiService.autoRefreshDuration; // Set countdown based on settings
+      await Future.delayed(Duration(milliseconds: 500)); // Ensure settings are loaded
+      refreshCountdown = apiService.autoRefreshDuration;
       apiService.fetchData();
     });
 
@@ -42,11 +47,55 @@ class HomeScreenState extends State<HomeScreen> {
         } else {
           apiService.fetchData();
           setState(() {
-            refreshCountdown = apiService.autoRefreshDuration; // Reset countdown
+            refreshCountdown = apiService.autoRefreshDuration;
           });
         }
       }
     });
+  }
+
+  // Handle back button press.
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Exit Application'),
+        content: Text(
+          'Exiting the app will stop background monitoring. Do you want to exit or minimize the app?',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () async {
+              // Minimize the app using the platform channel (only for Android).
+              if (Platform.isAndroid) {
+                try {
+                  await platform.invokeMethod('minimizeApp');
+                } on PlatformException catch (e) {
+                  // If the channel call fails, do nothing.
+                  print("Failed to minimize app: ${e.message}");
+                }
+              }
+              Navigator.of(context).pop(false); // Do not exit.
+            },
+            child: Text('Minimize'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Exit the app
+              Navigator.of(context).pop(true);
+            },
+            child: Text('Exit'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // Cancel the exit.
+            },
+            child: Text('Cancel'),
+          ),
+        ],
+      ),
+    )) ??
+        false;
   }
 
   @override
@@ -60,125 +109,127 @@ class HomeScreenState extends State<HomeScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Status Monitor'),
-        actions: [
-          IconButton(
-            icon: Icon(themeProvider.isDarkMode ? Icons.wb_sunny : Icons.nightlight_round),
-            onPressed: () => themeProvider.toggleTheme(),
-          ),
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SettingsScreen()),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Status Monitor'),
+          actions: [
+            IconButton(
+              icon: Icon(themeProvider.isDarkMode ? Icons.wb_sunny : Icons.nightlight_round),
+              onPressed: () => themeProvider.toggleTheme(),
+            ),
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsScreen()),
+              ),
+            ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(4.0),
+            child: Consumer<ApiService>(
+              builder: (context, apiService, child) {
+                return apiService.isLoading
+                    ? LinearProgressIndicator(minHeight: 4.0)
+                    : SizedBox.shrink();
+              },
             ),
           ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
-          child: Consumer<ApiService>(
-            builder: (context, apiService, child) {
-              return apiService.isLoading
-                  ? LinearProgressIndicator(minHeight: 4.0)
-                  : SizedBox.shrink();
-            },
-          ),
         ),
-      ),
-      body: Consumer<ApiService>(
-        builder: (context, apiService, child) {
-          if (apiService.errorMessage.isNotEmpty) {
-            return Center(child: Text(apiService.errorMessage));
-          }
+        body: Consumer<ApiService>(
+          builder: (context, apiService, child) {
+            if (apiService.errorMessage.isNotEmpty) {
+              return Center(child: Text(apiService.errorMessage));
+            }
 
-          return Column(
-            children: [
-              // Top Section: System Overview
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'System Overview',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+            return Column(
+              children: [
+                // Top Section: System Overview
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'System Overview',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
                               ),
-                            ),// Show only if enabled
                               Text(
                                 'Up/Total: ${apiService.upHealthyCount} / ${apiService.expectedServicesCount}',
                                 style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                               ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Last Update: ${apiService.lastUpdateTime}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                              ),
-                            ),
-                            if (apiService.isAutoRefreshEnabled) // Show only if enabled
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Text(
-                                'Auto Refresh in: $refreshCountdown s',
+                                'Last Update: ${apiService.lastUpdateTime}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
                                 ),
                               ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                      ],
+                              if (apiService.isAutoRefreshEnabled)
+                                Text(
+                                  'Auto Refresh in: $refreshCountdown s',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // GridView for Cards
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: _calculateGridColumns(context),
-                      crossAxisSpacing: 12.0,
-                      mainAxisSpacing: 12.0,
-                      childAspectRatio: 3.0,
+                // GridView for Cards
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: _calculateGridColumns(context),
+                        crossAxisSpacing: 12.0,
+                        mainAxisSpacing: 12.0,
+                        childAspectRatio: 3.0,
+                      ),
+                      itemCount: apiService.services.length,
+                      itemBuilder: (context, index) {
+                        final service = apiService.services[index];
+                        return _buildServiceCard(context, service);
+                      },
                     ),
-                    itemCount: apiService.services.length,
-                    itemBuilder: (context, index) {
-                      final service = apiService.services[index];
-                      return _buildServiceCard(context, service);
-                    },
                   ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Provider.of<ApiService>(context, listen: false).fetchData(forceRefresh: true),
-        child: Icon(Icons.refresh),
+              ],
+            );
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => Provider.of<ApiService>(context, listen: false).fetchData(forceRefresh: true),
+          child: Icon(Icons.refresh),
+        ),
       ),
     );
   }
@@ -235,8 +286,12 @@ class HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildMetric(context, icon: Icons.memory, label: "CPU", value: service['CPUPerc']),
-                _buildMetric(context, icon: Icons.storage, label: "Memory",
-                    value: "${service['MemUsage'].split(' / ')[0]} (${service['MemPerc']})"),
+                _buildMetric(
+                  context,
+                  icon: Icons.storage,
+                  label: "Memory",
+                  value: "${service['MemUsage'].split(' / ')[0]} (${service['MemPerc']})",
+                ),
                 _buildMetric(context, icon: Icons.cloud_download, label: "Net IO", value: service['NetIO']),
               ],
             ),
@@ -256,11 +311,14 @@ class HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(icon, size: 16, color: colorScheme.secondary),
             SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withAlpha((0.5 * 255).toInt()))),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12, color: colorScheme.onSurface.withAlpha((0.5 * 255).toInt()))),
           ],
         ),
         SizedBox(height: 2),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colorScheme.onSurface)),
+        Text(value,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colorScheme.onSurface)),
       ],
     );
   }
