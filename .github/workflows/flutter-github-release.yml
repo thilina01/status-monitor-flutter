@@ -92,7 +92,7 @@ jobs:
           tag: ${{ env.TAG }}
           name: Release ${{ env.TAG }}
           body: "Automated release for commit ${{ github.sha }}."
-          files: |
+          artifacts: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/flutter-apk/app-release.apk
 
