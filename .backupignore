@@ -1,36 +1,8 @@
-# === Flutter Build Outputs ===
-build/
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
+# === Flutter Tool Metadata ===
+.metadata
+.devtools_options.yaml
 
-# === IDE Files ===
-.idea/
-.vscode/
-*.iml
-
-# === Environment & Config ===
-.env
-*.keystore
-*.jks
-local.properties
-
-# === Android / iOS Specific ===
-android/app/debug/
-android/app/release/
-android/key.properties
-ios/Pods/
-ios/Runner.xcworkspace/
-
-# === Generated / Cache ===
-pubspec.lock
-*.lock
-*.snapshot
-*.g.dart
-generated_plugin_registrant.dart
-
-# === Assets (non-source media) ===
+# === Non-Source Assets ===
 *.png
 *.jpg
 *.jpeg
@@ -46,24 +18,24 @@ generated_plugin_registrant.dart
 *.wav
 *.ogg
 *.pdf
-assets/**
-!assets/**/*.json
-!assets/**/*.yaml
-!assets/**/*.txt
-!assets/**/*.md
 
-# === Binary Files ===
-*.so
-*.exe
-*.dll
-*.dylib
-*.bin
-*.apk
-*.ipa
-*.aab
+# === Native Resource Files ===
+*.xml
+*.plist
+*.storyboard
+*.xcconfig
+*.pbxproj
 
-# === Misc ===
-*.log
-*.tmp
-.DS_Store
-Thumbs.db
+# === iOS/Xcode Intermediate & Config ===
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcshareddata/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/
+
+# === CI/CD Directories ===
+.github/
+.gitlab/
+
+# === Optional: Tests ===
+test/
+*.xctest

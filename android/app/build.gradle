@@ -6,8 +6,8 @@ plugins {
 }
 
 // Load keystore properties from key.properties
-def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
@@ -20,6 +20,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        // Enable core library desugaring
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -27,10 +29,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.slconsultech.statusmonitorapp"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -39,27 +38,39 @@ android {
 
     signingConfigs {
         release {
+            if (keystoreProperties['storeFile']) {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
             storeFile file(keystoreProperties['storeFile'])
             storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.release
+            // If signing is configured, use it. Otherwise, skip signing (for CI/testing).
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
+
+            // Optional: include native debug symbols in .aab (useful for crash reporting)
             ndk {
                 debugSymbolLevel 'FULL'
             }
+
+            // Enable Proguard/R8 if needed
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     dependencies {
         implementation 'androidx.core:core-splashscreen:1.0.1'
         implementation 'com.google.android.material:material:1.9.0'
+        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+
     }
 
 }
