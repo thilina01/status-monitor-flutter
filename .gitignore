@@ -97,3 +97,6 @@ app-release.aab
 
 # Generated plugin registrant (not required in version control)
 **/generated_plugin_registrant.dart
+
+# Ignore project backup files
+*-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]+[0-9][0-9][0-9][0-9].txt

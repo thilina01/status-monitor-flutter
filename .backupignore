@@ -1,0 +1,69 @@
+# === Flutter Build Outputs ===
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# === IDE Files ===
+.idea/
+.vscode/
+*.iml
+
+# === Environment & Config ===
+.env
+*.keystore
+*.jks
+local.properties
+
+# === Android / iOS Specific ===
+android/app/debug/
+android/app/release/
+android/key.properties
+ios/Pods/
+ios/Runner.xcworkspace/
+
+# === Generated / Cache ===
+pubspec.lock
+*.lock
+*.snapshot
+*.g.dart
+generated_plugin_registrant.dart
+
+# === Assets (non-source media) ===
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+*.ttf
+*.otf
+*.woff*
+*.mp3
+*.mp4
+*.wav
+*.ogg
+*.pdf
+assets/**
+!assets/**/*.json
+!assets/**/*.yaml
+!assets/**/*.txt
+!assets/**/*.md
+
+# === Binary Files ===
+*.so
+*.exe
+*.dll
+*.dylib
+*.bin
+*.apk
+*.ipa
+*.aab
+
+# === Misc ===
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
